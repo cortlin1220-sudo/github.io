@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lizallakes Theater</title>
+
+<style>
+/* ---------- THEME VARIABLES ---------- */
+:root {
+    --bg: #0f0f0f;
+    --card: #1a1a1a;
+    --text: #ffffff;
+    --accent: #ff3d3d;
+}
+
+.light-mode {
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --text: #111;
+    --accent: #e53935;
+}
+
+/* ---------- GLOBAL ---------- */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: 0.3s;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 25px;
+    background: var(--card);
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+/* ---------- SEARCH ---------- */
+#search {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    width: 200px;
+}
+
+/* ---------- LAYOUT ---------- */
+.container {
+    display: flex;
+    height: calc(100vh - 70px);
+}
+
+.player-section {
+    flex: 3;
+    padding: 20px;
+}
+
+.sidebar {
+    flex: 1;
+    background: var(--card);
+    overflow-y: auto;
+}
+
+/* ---------- VIDEO PLAYER ---------- */
+.video-wrapper {
+    position: relative;
+    padding-top: 56.25%;
+    background: black;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+    .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: black;
+    }
+
+
+/* ---------- LOADER ---------- */
+.loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 6px solid #444;
+    border-top: 6px solid var(--accent);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+@keyframes spin {
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---------- VIDEO LIST ---------- */
+.video-item {
+    padding: 12px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    transition: 0.2s;
+}
+
+.video-item:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.video-item img {
+    width: 80px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.video-info {
+    font-size: 14px;
+}
+
+/* ---------- ADMIN PANEL ---------- */
+.admin {
+    padding: 10px;
+    border-top: 1px solid #333;
+}
+
+.admin input {
+    width: 100%;
+    margin-top: 5px;
+    padding: 6px;
+}
+
+.admin button {
+    margin-top: 6px;
+    width: 100%;
+    padding: 8px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+/* ---------- MOBILE ---------- */
+@media(max-width: 900px) {
+    .container {
+        flex-direction: column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Lizallakes Theater</h1>
+
+<div>
+<input id="search" placeholder="Search videos..." />
+<button onclick="toggleTheme()">🌙</button>
+</div>
+</header>
+
+<div class="container">
+
+<!-- PLAYER -->
+<div class="player-section">
+
+    <div class="video-wrapper">
+        <div class="loader" id="loader"></div>
+        <iframe id="player"
+                allow="autoplay; fullscreen; encrypted-media"
+                allowfullscreen
+                referrerpolicy="no-referrer"></iframe>
+
+    </div>
+
+<h2 id="title">Select a Video</h2>
+<p id="desc"></p>
+
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="videoList"></div>
+
+</div>
+
+
+<script>
+/* ---------- SAMPLE VIDEO DATA ---------- */
+let videos = [
+    {
+        title: "Shrek",
+        desc: "",
+        link: "https://drive.google.com/file/d/181FkiZwd4SyWsqpTrv8HZYTc-To9vpBG/preview",
+        thumb: "https://img4.wikia.nocookie.net/__cb20120116200633/shrek/images/a/a6/Shrek_1_Title_Screen.png"
+    },
+    {
+        title: "Rio",
+        desc: "",
+        link: "https://drive.google.com/file/d/1c7rIgnIaSygiVkMTSOHtt2UcBPDMP1Ub/preview",
+        thumb: "https://peterchanconceptart.com/wp-content/uploads/2018/01/Rio-Title-450-640x400.jpg"
+    },
+    {
+        title: "KPOP Demon Hunters",
+        desc: "",
+        link: "https://drive.google.com/file/d/1wtmWx4-8AiHR18DDbWOMl2VPfgcVVGNj/preview",
+        thumb: "https://hype.my/wp-content/uploads/2025/06/KPop-Demon-Hunters-Banner-scaled.jpg"
+    },
+
+
+];
+    let playlists = [
+        {
+            name: "Full Movies",
+            videos: [
+                {
+                    title: "Shrek",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/181FkiZwd4SyWsqpTrv8HZYTc-To9vpBG/preview",
+                    thumb: "https://i.pinimg.com/736x/03/07/dd/0307dde19a5a560940d07b73bbb295ff.jpg"
+                },
+                {
+                    title: "Rio",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1c7rIgnIaSygiVkMTSOHtt2UcBPDMP1Ub/preview",
+                    thumb: "https://peterchanconceptart.com/wp-content/uploads/2018/01/Rio-Title-450-640x400.jpg"
+                },
+                {
+                    title: "KPOP Demon Hunters",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1wtmWx4-8AiHR18DDbWOMl2VPfgcVVGNj/preview",
+                    thumb: "https://hype.my/wp-content/uploads/2025/06/KPop-Demon-Hunters-Banner-scaled.jpg"
+                },
+                {
+                    title: "Mean Girls",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1xuedDtR38kblUxdiXCTe1abbRZV0FW8a/preview",
+                    thumb: "https://images1.resources.foxtel.com.au/store2/mount1/16/2/ats3w.jpg"
+                },
+                {
+                    title: "A Minecraft Movie",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/10jXRaDML32ArfEXWE6P66HZMFdHBkghV/preview",
+                    thumb: "https://wallpapers-clan.com/wp-content/uploads/2025/05/minecraft-movie-logo-title-wallpaper-preview.jpg"
+                },
+                {
+                    title: "Cloudy With A Chance of Meatballs",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1xuedDtR38kblUxdiXCTe1abbRZV0FW8a/preview",
+                    thumb: "https://pic-bstarstatic.akamaized.net/ugc/b973175815e1325561ac754c3c3307bddef5f768.jpg"
+                },
+                {
+                    title: "Spider Man Into The Spiderverse",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1zphWKOgRwx7ta5b_Oj-0mbBMZP916LxV/preview",
+                    thumb: "https://i0.wp.com/highoncinemaa.com/wp-content/uploads/2023/05/Spider-Verse-2-IMAX-poster-cropped.jpg?w=1920&ssl=1"
+                }
+            ]
+        },
+        {
+            name: "Family Guy",
+            videos: [
+                {
+                    title: "Ep 1",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1Qqw7MT67o90d_7BjXvQuUM4zX534WXXu/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                },
+                {
+                    title: "Ep 2",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1kiXqrnbmrjCM1vkSeEgT1L9hlZLWknhP/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                },
+                {
+                    title: "Ep 3",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1hz0kEIZBvlS-09DeUScS7ac1CHWCWCIN/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                },
+                {
+                    title: "Ep 4",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1KDEs6dMfG-uXi3f7IjdcPr9FZWNStg_o/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                },
+                {
+                    title: "Ep 5",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1BytXCN_2AmyVln6a3d51pqobEuGEMf-n/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                },
+                {
+                    title: "Ep 6",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/19GbMaUQCF7YKBp5qE-JxVoJtySd2JsTk/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                },
+                {
+                    title: "Ep 7",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1BTNhVM29_xpRZ3TJ-pGjyjByEk0JO15g/preview",
+                    thumb: "https://i.ytimg.com/vi/h2_tGns93Wk/maxresdefault.jpg"
+                }
+            ]
+        },
+        {
+            name: "My Little Pony (watch ts and ur a gooner fr)",
+            videos: [
+                {
+                    title: "Ep 1",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1zl5688Hf6m6mlzdvzRdL5ebRlnwQyvmE/preview",
+                    thumb: "https://www.susannavaris.com/blogg/wp-content/uploads/2012/07/MLP-show-title-card_1.jpg"
+                },
+                {
+                    title: "Ep 2",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1Is_YbrhK9L5O999vLaU8sFLVoQ2tRWcu/preview",
+                    thumb: "https://www.susannavaris.com/blogg/wp-content/uploads/2012/07/MLP-show-title-card_1.jpg"
+                },
+                {
+                    title: "Ep 3",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1iPlk8xavv8vVKb5eL6y3245OExjtx39N/preview",
+                    thumb: "https://www.susannavaris.com/blogg/wp-content/uploads/2012/07/MLP-show-title-card_1.jpg"
+                },
+                {
+                    title: "Ep 4",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1HuwU8Hy77oFcBxcUjSELRBSykNE7ZVB/preview",
+                    thumb: "https://www.susannavaris.com/blogg/wp-content/uploads/2012/07/MLP-show-title-card_1.jpg"
+                }
+
+
+            ]
+        },
+        {
+            name: "Stranger Things",
+            videos: [
+                {
+                    title: "Ep 1",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/11L4IJj6NN0fhH-N0T6hajKwrNh2s2Ewd/preview",
+                    thumb: "https://mirror80.com/wp-content/uploads/2016/07/Stranger-Things-title.jpg"
+                },
+                {
+                    title: "Ep 2",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1RjKrnsGAgYA9EHPAfLwAHsMRoGzALgPf/preview",
+                    thumb: "https://mirror80.com/wp-content/uploads/2016/07/Stranger-Things-title.jpg"
+                },
+                {
+                    title: "Ep 3",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1J5Q5P90soY97comY94zEzpDjSIbxnQjJ/preview",
+                    thumb: "https://mirror80.com/wp-content/uploads/2016/07/Stranger-Things-title.jpg"
+                },
+                {
+                    title: "Ep 4",
+                    desc: "",
+                    link: "https://drive.google.com/file/d/1847oX5ALNPgPfqZ68DkSwiSaUknFyOnh/preview",
+                    thumb: "https://mirror80.com/wp-content/uploads/2016/07/Stranger-Things-title.jpg"
+                },
+
+            ]
+        },
+    ];
+
+let currentIndex = 0;
+
+/* ---------- CONVERT GOOGLE DRIVE LINK ---------- */
+    function convertDriveLink(link) {
+
+        let idMatch = link.match(/[-\w]{25,}/);
+
+        if (!idMatch) return null;
+
+        return `https://drive.google.com/file/d/${idMatch[0]}/preview`;
+    }
+
+
+/* ---------- LOAD VIDEO ---------- */
+    let currentPlaylistIndex = 0;
+    let currentVideoIndex = 0;
+
+    function loadVideo(pIndex, vIndex) {
+        let video = playlists[pIndex].videos[vIndex];
+        let embed = convertDriveLink(video.link);
+
+        if (!embed) return alert("Invalid Drive Link");
+
+        currentPlaylistIndex = pIndex;
+        currentVideoIndex = vIndex;
+
+        let player = document.getElementById("player");
+        let loader = document.getElementById("loader");
+
+        loader.style.display = "block";
+        player.src = "about:blank";
+
+        setTimeout(() => {
+            player.src = embed;
+            loader.style.display = "none";
+        }, 500);
+
+        document.getElementById("title").textContent = video.title;
+        document.getElementById("desc").textContent = video.desc;
+    }
+
+
+/* ---------- RENDER LIST ---------- */
+    function renderList() {
+        let list = document.getElementById("videoList");
+        list.innerHTML = "";
+
+        playlists.forEach((playlist, pIndex) => {
+            // Playlist header
+            let header = document.createElement("div");
+            header.style.fontWeight = "bold";
+            header.style.padding = "10px";
+            header.textContent = playlist.name;
+            list.appendChild(header);
+
+            // Loop through videos in this playlist
+            playlist.videos.forEach((v, i) => {
+                let item = document.createElement("div");
+                item.className = "video-item";
+                item.onclick = () => loadVideo(pIndex, i); // Pass playlist & video index
+
+                item.innerHTML = `
+                <img src="${v.thumb || 'https://via.placeholder.com/120x70'}">
+                <div>
+                    <div>${v.title}</div>
+                    <small>${v.desc || ""}</small>
+                </div>
+            `;
+                list.appendChild(item);
+            });
+        });
+    }
+
+
+
+
+/* ---------- SEARCH ---------- */
+document.getElementById("search").addEventListener("input", e => {
+
+    let val = e.target.value.toLowerCase();
+
+    document.querySelectorAll(".video-item").forEach((item, i) => {
+        item.style.display = videos[i].title.toLowerCase().includes(val) ? "flex" : "none";
+    });
+});
+
+/* ---------- DARK MODE ---------- */
+function toggleTheme() {
+    document.body.classList.toggle("light-mode");
+}
+
+/* ---------- AUTOPLAY NEXT ---------- */
+document.getElementById("player").addEventListener("ended", () => {
+    let next = currentIndex + 1;
+    if (videos[next]) loadVideo(next);
+});
+
+/* ---------- INITIAL LOAD ---------- */
+renderList();
+
+</script>
+</body>
+</html>
+
+
+
